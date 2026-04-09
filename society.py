@@ -25,7 +25,7 @@ def info(stdscr, action, people):
         
         color = not color
     
-    stdscr.clear()
+    stdscr.erase()
 
     title = 'PYTHON SOCIETY PROGRAM'
 
