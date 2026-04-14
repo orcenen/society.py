@@ -13,6 +13,7 @@ import curses, json
 
 # .VARIABLES
 
+society_name = ''
 people = {}
 afterlife = {}
 generations = 0
@@ -23,7 +24,8 @@ law = False
 # .UTILITY
 
 def u_info(stdscr, action, people):
-    global law    
+    global law
+    global society_name    
 
     curses.start_color()
     curses.use_default_colors()
@@ -31,7 +33,7 @@ def u_info(stdscr, action, people):
     curses.curs_set(0)
     stdscr.erase()
 
-    title = 'PYTHON SOCIETY PROGRAM'
+    title = f'PYTHON SOCIETY PROGRAM - {society_name}'
 
     height, width = stdscr.getmaxyx()
     x = (width - len(title)) // 2
@@ -69,6 +71,19 @@ def u_info(stdscr, action, people):
 
 def u_run_info(action, people): curses.wrapper(lambda stdscr: u_info(stdscr, action or 'No action.', people))
 
+def a_gift():
+    global people
+    
+    giver = choice(tuple(people.keys()))
+    receiver = choice(tuple(people.keys()))
+
+    if giver == receiver:
+        return f'{giver} gave themselves a gift.'
+    
+    steal(giver, receiver)
+    
+    return f'{giver} gave {receiver} a gift of {people[giver]["money"]} currency.'
+
 def u_preset():
     global generations
     
@@ -84,7 +99,7 @@ def u_preset():
 def a_cry():
     global people
 
-    tear = choice(list(people.keys()))
+    tear = choice(tuple(people.keys()))
 
     return f'{tear} cried.'
 
@@ -92,7 +107,7 @@ def a_poetry():
     global people
     global afterlife
     
-    writer = choice(list(people.keys()))
+    writer = choice(tuple(people.keys()))
     
     if random() >= 0.5:
         return f'{writer} wrote a poem.'
@@ -106,7 +121,7 @@ def a_poetry():
 def a_breakdown():
     global people
 
-    victim = choice(list(people.keys()))
+    victim = choice(tuple(people.keys()))
 
     return f'{victim} had a psychotic breakdown.'
 
@@ -114,14 +129,15 @@ def a_journey():
     global people
     global generations
 
-    if len(list(people.keys())) < 2:
+    if len(tuple(people.keys())) < 2:
         return a_free()
 
-    traveler = choice(list(people.keys()))
+    traveler = choice(tuple(people.keys()))
 
     if random() >= 0.5:
-        name = gen_name().strip()
-
+        name = u_gen_name().strip()
+        while name in people:
+            name = u_gen_name().strip()
         people[name] = u_preset()
         
         return f'{traveler} went on a journey and found a traveler named {name}.'
@@ -138,14 +154,14 @@ def steal(stealer, victim):
     people[victim]["money"] = 0
     
 def a_work():
-    worker = choice(list(people.keys()))
+    worker = choice(tuple(people.keys()))
     money = 1
     people[worker]["money"] += money
     
     return f'{worker} made {money} currency working. (total {people[worker]["money"]})'
 
 def a_wanderer():
-    speaker = choice(list(people.keys()))
+    speaker = choice(tuple(people.keys()))
 
     return f'A wandering tribe went by, and {speaker} told them Folklore.'
 
@@ -160,10 +176,10 @@ def a_talk():
         'religion',
         'hope',
         'suicide prevention',
-        choice(list(people.keys()))
+        choice(tuple(people.keys()))
     ]
 
-    speaker = choice(list(people.keys()))
+    speaker = choice(tuple(people.keys()))
 
     return f'{speaker} spoke publicly about {choice(topics)}.'
 
@@ -171,12 +187,12 @@ def a_settlers():
     global people
     global generations
         
-    attacker = choice(list(people.keys()))
+    attacker = choice(tuple(people.keys()))
     amount = randint(2, 5)
     names = []        
 
     for _ in range(amount):
-        baby = gen_name().strip()
+        baby = u_gen_name().strip()
         names.append(baby)
         people[baby] = u_preset()
     return f"{amount} settlers joined the society. ({', '.join(names)})"
@@ -184,7 +200,7 @@ def a_settlers():
 def a_terror():
     global people
     
-    attacker = choice(list(people.keys()))
+    attacker = choice(tuple(people.keys()))
     kills = randint(1, 10)
     victims = []    
     actual_kills = 0
@@ -193,7 +209,7 @@ def a_terror():
         if len(people) <= 1:
             break
 
-        victim = choice(list(people.keys()))
+        victim = choice(tuple(people.keys()))
         if victim != attacker:
             victims.append(victim)
             steal(attacker, victim)
@@ -214,7 +230,7 @@ def kill(person):
     afterlife[person] = people[person]
     people.pop(person)
 
-def gen_name():
+def u_gen_name():
     options = ['ka', 're', 'ku', 'so', 'fa', 'si', 'di', 'to', 
 'ne', 'ko', 'shi', 'rok', 'knet', 'loru', 'ca', 'me', ' ']
     name = ''
@@ -227,14 +243,18 @@ def a_baby():
     global people
     global generations
     
-    giver1 = choice(list(people.keys()))
-    giver2 = choice(list(people.keys()))
+    giver1 = choice(tuple(people.keys()))
+    giver2 = choice(tuple(people.keys()))
     
-    baby = gen_name().strip()
-    
+    baby = u_gen_name().strip()
+    while baby in people:
+        baby = u_gen_name().strip()
     people[baby] = u_preset()
+    
     if random() <= 0.2:
-        baby2 = gen_name().strip()
+        baby2 = u_gen_name().strip()
+        while baby2 in people:
+            baby2 = u_gen_name().strip()
         people[baby2] = u_preset()
 
         if giver1 == giver2:
@@ -251,7 +271,7 @@ def a_order():
     global law
     global people
     
-    congress = choice(list(people.keys()))
+    congress = choice(tuple(people.keys()))
     if not law:
         law = True
         return f'{congress} reinstated laws.'
@@ -263,14 +283,14 @@ def a_murder():
     global people
     global afterlife
 
-    attacker = choice(list(people.keys()))
-    victim = choice(list(people.keys()))
+    attacker = choice(tuple(people.keys()))
+    victim = choice(tuple(people.keys()))
 
     if attacker == victim:
         kill(attacker)
         return f'{attacker} killed themselves.'
         
-    elif law and len(people) <= 3:
+    elif law and len(people) >= 3:
         filtered = [x for x in people if x not in (attacker, victim)]
         if filtered: 
             cop = choice(filtered)
@@ -283,7 +303,10 @@ def a_murder():
             kill(victim)
             return f'{attacker} killed {victim}, and {cop} executed them for it.'
         else:
-            return a_free()
+            steal(attacker, victim)
+        kill(victim)
+        people[attacker]['kills'] += 1
+        return f'{attacker} killed {victim}.'
     else:
         steal(attacker, victim)
         kill(victim)
@@ -305,7 +328,8 @@ actions = [
     a_journey,
     a_breakdown,
     a_poetry,
-    a_cry
+    a_cry,
+    a_gift
 ]        
 
 # .GENERATION
@@ -322,6 +346,7 @@ def main():
     global afterlife
     global generations
     global history
+    global society_name
 
     print('\n' * 5)
 
@@ -329,8 +354,15 @@ def main():
     number_of_people = int(input('# of people: '))
     for i in range(number_of_people):
         name = input(f'name #{i+1}: ')
-        people[name] = u_preset()
-
+        if name == "-r":
+            name = u_gen_name().strip()
+            while name in people:
+                name = u_gen_name().strip()
+            people[name] = u_preset()
+        else:
+            people[name] = u_preset()
+    society_name = input('society name: ')
+    
     peak = number_of_people    
 
     while len(people) > 0:
@@ -340,7 +372,7 @@ def main():
         generations += 1
         peak = max(peak, len(people))
         
-        history.append(f'{generations}: {generation()}')
+        history.append(f'{generations}: {generation()} ({len(people)})')
         u_run_info(history[-1], people)
         
         if Mod.enabled:
@@ -349,8 +381,15 @@ def main():
     u_run_info(f'Everybody died. It took {generations} generations for it to happen. The peak was {peak}.', afterlife)
     
     print('\n' * 5)
+    
+    final = {
+        'society_name': society_name,
+        'afterlife': afterlife,
+        'history': history
+    }
+    
     if input('Copy history to clipboard? (Y or N) ').upper() == 'Y':
-        copy(json.dumps(afterlife, indent=4) + json.dumps(history, indent=4))
+        copy(json.dumps(final, indent=4))
 
 # .MODS
 
@@ -385,12 +424,14 @@ class Mod:
     @classmethod
     def change_person(cls, new_stats):
         global u_preset
-        def u_preset():
+        def _u_preset():
             global generations
             
-            return new_stats
+            return dict(new_stats | {'born': generations})
+        
+        u_preset = _u_preset
     @classmethod
-    def safety():
+    def safety(cls):
         return len(people) > 0
 
 if __name__ == '__main__':
